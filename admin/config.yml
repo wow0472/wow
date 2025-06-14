@@ -1,0 +1,19 @@
+backend:
+  name: github
+  repo: wow0472/wow  # 너 GitHub 저장소 정보로 바꿔줘
+  branch: main
+
+media_folder: "images/uploads"
+public_folder: "/images/uploads"
+
+collections:
+  - name: "wiki"
+    label: "Wiki"
+    folder: "wiki"
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - { label: "이름", name: "title", widget: "string" }
+      - { label: "소개", name: "description", widget: "text" }
+      - { label: "프로필 이미지", name: "image", widget: "image" }
+      - { label: "본문", name: "body", widget: "markdown" }
