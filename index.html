@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>개인 위키</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>개인 위키</h1>
+  </header>
+  <main>
+    <div id="wiki-list"></div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script>
+    // GitHub API 통해 wiki 폴더의 Markdown 파일 목록 받아오기
+    const repoOwner = 'wow0472';  // 네 GitHub ID로 변경
+    const repoName = 'wow';   // 저장소명 변경
+    const wikiFolder = 'wiki';
+
+    async function fetchWikiList() {
+      const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${wikiFolder}`;
+      const res = await fetch(apiUrl);
+      if (!res.ok) {
+        document.getElementById('wiki-list').innerText = '위키 목록을 불러올 수 없습니다.';
+        return;
+      }
+      const files = await res.json();
+      const listDiv = document.getElementById('wiki-list');
+      files.forEach(async file => {
+        if (!file.name.endsWith('.md')) return;
+        // Markdown 파일 내용 가져오기
+        const fileRes = await fetch(file.download_url);
+        const mdText = await fileRes.text();
+        // 마크다운에서 메타정보 (title, description, image) 파싱 (간단히 YAML front matter 사용 가능)
+        // 여기서는 첫 줄 제목(# 제목)과 이미지 ![]()만 간단히 추출
+        const lines = mdText.split('\n');
+        const titleLine = lines.find(line => line.startsWith('# ')) || '제목 없음';
+        const title = titleLine.replace('# ', '').trim();
+        // 이미지 경로 찾기 (첫 번째 ![alt](url))
+        const imgLine = lines.find(line => line.match(/!\[.*\]\(.+\)/));
+        let imgUrl = 'images/example.jpg'; // 기본 이미지
+        if (imgLine) {
+          const match = imgLine.match(/!\[.*\]\((.+)\)/);
+          if (match) imgUrl = match[1];
+        }
+
+        // 카드 생성
+        const card = document.createElement('div');
+        card.className = 'wiki-card';
+        card.innerHTML = `
+          <img src="${imgUrl}" alt="${title}" />
+          <p>${title}</p>
+        `;
+        card.addEventListener('click', () => {
+          window.location.href = `wiki/${file.name.replace('.md', '.html')}`;
+        });
+        listDiv.appendChild(card);
+      });
+    }
+
+    fetchWikiList();
+  </script>
+</body>
+</html>
